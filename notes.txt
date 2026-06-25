@@ -1,0 +1,9 @@
+# How to load back the writer map later...
+# import pandas as pd
+
+# df = pd.read_csv("writer_index.csv")
+
+# writer_map = {}
+
+# for writer_id, group in df.groupby("writer_id"):
+#     writer_map[writer_id] = group["filepath"].tolist()
