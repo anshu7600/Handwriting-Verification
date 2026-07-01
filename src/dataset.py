@@ -74,11 +74,11 @@ class SiameseDataset(Dataset): # Inherit from the Dataset class, which is a base
     def _load_image(self, path):
         img = Image.open(path)
 
-        print("Before convert:", img.mode)
+        # print("Before convert:", img.mode)
 
         img = img.convert("RGB")
 
-        print("After convert:", img.mode)
+        # print("After convert:", img.mode)
 
         if self.transform:
             img = self.transform(img)
