@@ -63,7 +63,7 @@ class SiameseDataset(Dataset): # Inherit from the Dataset class, which is a base
     def __len__(self): 
         # returns the number of samples in the dataset. This is used by PyTorch to determine how many batches to create during training or evaluation.
         return self.num_samples
-
+  
     # def _load_image(self, path): 
     #     # helper function to load an image from a given path, convert it to grayscale, and apply any specified transformations. 
     #     # This is used in the __getitem__ method to load the images for each pair.
@@ -193,13 +193,15 @@ for img1, img2, labels in loader:
     print(img2.shape)
     print(labels.shape)
     break # without this it would print the shapes of all batches, but we only want to see the first batch for verification.
-
+    
 print("\nMore Data :)")
 for i in range(5): # does the same thing as the above loop
     img1, img2, label = dataset[i]
-
+       
     print(f"Sample {i}")
     print("Image 1 shape:", img1.shape)
     print("Image 2 shape:", img2.shape)
     print(f"Label: {label.item()} - {'Same writer' if label.item() == 1 else 'Different writers'}")
-    print("-" * 30)
+    print("-" * 30) 
+
+
