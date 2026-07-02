@@ -1,41 +1,13 @@
-from collections import defaultdict
-import os
+import sys
 from pathlib import Path
-import random
-import json
-
-# Is the path to the dataset 
-SOURCE_DIR = Path("C:\\Users\\vvrao\\Porfolio\\Handwriting-Verification\\dataset")
-
-if not SOURCE_DIR.exists():  # Check if the dataset folder exists
-    raise Exception(f"Dataset folder not found: {SOURCE_DIR}")
-
-# When making a dictionary, if the key doesn't exist, it will create a new list for that key
-writer_map = defaultdict(list)
-
-for file in os.listdir(SOURCE_DIR): # Loop through all files in the dataset folder
-    # writer_id will be same for the same writer, so we can use it to group images by writer
-    writer_id = file[:4]  # writer_id is the first 4 characters of the filename (example: 0001a.png)
-    path = os.path.join(SOURCE_DIR, file) # Create the full path to the file, by joining the dataset folder path and the filename
-    writer_map[writer_id].append(path)  # makes a key and appends the path to the list of images for that writer_id
-
-os.makedirs("..\\data", exist_ok=True)
-with open("..\\data\\writer_map.json", "w") as f: # makes a new file called writer_map.json and opens it in write mode, so we can write the writer_map dictionary to it in JSON format
-    json.dump(
-        {k: [p for p in v] for k, v in writer_map.items()}, # makes a new dictionary with the same keys as writer_map, but the values are lists of paths (instead of defaultdict objects)
-        f,
-        indent=4
-    )
-
-
-
-
-
-
 import random
 import torch
 from torch.utils.data import Dataset
 from PIL import Image
+
+root_path = Path.cwd().parent
+if str(root_path) not in sys.path:
+    sys.path.append(str(root_path))
 
 # Purpose of the SiameseDataset class is to create a dataset that can be used for training a Siamese network. 
 # A Siamese network is a type of neural network that learns to differentiate between two inputs, often used for tasks like signature verification or face recognition. 
@@ -137,71 +109,31 @@ class SiameseDataset(Dataset): # Inherit from the Dataset class, which is a base
 
 
 
+# # Checking if the dataset and dataloader are working correctly by printing the shapes of the images and labels for a single sample and a batch of samples.
 
+# img1, img2, label = dataset[0] # basically called __getitem__(0) to get the first sample from the dataset, which returns a pair of images and a label indicating whether they are from the same writer or not.
 
-from torchvision import transforms
-from torch.utils.data import DataLoader
+# print("Description of the an image in the dataset:")
+# # format is [channels, height, width] (C, H, W) for PyTorch tensors. For grayscale images, channels = 1.
+# print(img1.shape) 
+# print(img2.shape)
+# print(f"Label (.0 means different writers, and .1 means same writer): {label}")
 
-# Define image preprocessing
-your_transforms = transforms.Compose([
-    transforms.Resize((224, 224)), # Resize all images
-    transforms.ToTensor(), # Convert PIL Image to PyTorch Tensor
-    transforms.Normalize(
-    mean=[0.485, 0.456, 0.406],
-    std=[0.229, 0.224, 0.225]
-) # Normalize RGB image, by subtracting the mean and dividing by the standard deviation. This helps the model learn better by ensuring that the input data has a consistent scale and distribution.
-])
+# print("\n")
 
-# Create the dataset
-dataset = SiameseDataset(
-    writer_map=writer_map,
-    transform=your_transforms,
-    num_samples=100000
-)
-
-# Create the DataLoader, which asks the dataset for batches of data during training or evaluation. It handles shuffling, batching, and parallel loading of data. 
-loader = DataLoader(
-    dataset, # Whenever it needs a batch of data, it will call the __getitem__ method of the dataset to get a sample. 
-    # The DataLoader will then combine these samples into batches and return them to the training loop.
-    # it will call it similar to this: dataset[0], dataset[1], ..., dataset[batch_size-1] which actually runs the __getitem__ method of the dataset class, which generates a pair of images and a label indicating whether they are from the same writer or not.
-    # and the number passed in doesn't matter since the dataset is virtual and generates pairs dynamically, but it is used to determine how many batches to create during training or evaluation.
-
-    batch_size=32, # Number of samples per batch to load. 32 is a common choice, but can be adjusted.
-
-    # doesn't do much since __getitem__ generates pairs dynamically
-    shuffle=True # Whether to shuffle the data at every epoch. Shuffling is important for training to ensure that the model does not learn any order-based patterns in the data.
-)
-
-
-
-
-# Checking if the dataset and dataloader are working correctly by printing the shapes of the images and labels for a single sample and a batch of samples.
-
-img1, img2, label = dataset[0] # basically called __getitem__(0) to get the first sample from the dataset, which returns a pair of images and a label indicating whether they are from the same writer or not.
-
-print("Description of the an image in the dataset:")
-# format is [channels, height, width] (C, H, W) for PyTorch tensors. For grayscale images, channels = 1.
-print(img1.shape) 
-print(img2.shape)
-print(f"Label (.0 means different writers, and .1 means same writer): {label}")
-
-print("\n")
-
-for img1, img2, labels in loader: 
-    # used the loader which batches the data into 32 samples per batch, and returns a tuple of 3 tensors: img1, img2, and labels. Each tensor has a shape of [batch_size, channels, height, width] for the images, and [batch_size] for the labels.
-    print(img1.shape)
-    print(img2.shape)
-    print(labels.shape)
-    break # without this it would print the shapes of all batches, but we only want to see the first batch for verification.
+# for img1, img2, labels in loader: 
+#     # used the loader which batches the data into 32 samples per batch, and returns a tuple of 3 tensors: img1, img2, and labels. Each tensor has a shape of [batch_size, channels, height, width] for the images, and [batch_size] for the labels.
+#     print(img1.shape)
+#     print(img2.shape)
+#     print(labels.shape)
+#     break # without this it would print the shapes of all batches, but we only want to see the first batch for verification.
     
-print("\nMore Data :)")
-for i in range(5): # does the same thing as the above loop
-    img1, img2, label = dataset[i]
+# print("\nMore Data :)")
+# for i in range(5): # does the same thing as the above loop
+#     img1, img2, label = dataset[i]
        
-    print(f"Sample {i}")
-    print("Image 1 shape:", img1.shape)
-    print("Image 2 shape:", img2.shape)
-    print(f"Label: {label.item()} - {'Same writer' if label.item() == 1 else 'Different writers'}")
-    print("-" * 30) 
-
-
+#     print(f"Sample {i}")
+#     print("Image 1 shape:", img1.shape)
+#     print("Image 2 shape:", img2.shape)
+#     print(f"Label: {label.item()} - {'Same writer' if label.item() == 1 else 'Different writers'}")
+#     print("-" * 30) 
